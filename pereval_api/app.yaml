@@ -1,0 +1,13 @@
+runtime: python310
+entrypoint: gunicorn --bind 0.0.0.0:8000 pereval_api.wsgi:application
+
+env_variables:
+  DEBUG: "False"
+  SECRET_KEY: "your-production-secret-key-change-this"
+  FSTR_DB_HOST: "your-db-host.yandexcloud.net"
+  FSTR_DB_NAME: "pereval"
+  FSTR_DB_LOGIN: "your-db-user"
+  FSTR_DB_PASS: "your-db-password"
+
+basic_scaling:
+  max_instances: 2
