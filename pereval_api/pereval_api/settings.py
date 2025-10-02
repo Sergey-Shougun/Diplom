@@ -1,16 +1,20 @@
 from pathlib import Path
-import sys
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-0ey##*e(ykn(b@ai%^$k@&_(%to@iicz8yj+jkyly+ql+(2=@4')
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-DEBUG = True
+ALLOWED_HOSTS = ['.railway.app', '127.0.0.1', 'localhost']
 
-SECRET_KEY = 'django-insecure-0ey##*e(ykn(b@ai%^$k@&_(%to@iicz8yj+jkyly+ql+(2=@4'
-
-
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -22,10 +26,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'pereval',
     'drf_yasg',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -56,13 +63,18 @@ WSGI_APPLICATION = 'pereval_api.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pereval',
-        'USER': 'postgres',
-        'PASSWORD': 'bubuka2810',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ.get('DATABASE_NAME', 'pereval'),
+        'USER': os.environ.get('DATABASE_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
+        'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
     }
 }
+
+if 'DATABASE_URL' in os.environ:
+    import dj_database_url
+
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -84,7 +96,9 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SWAGGER_SETTINGS = {
@@ -98,8 +112,8 @@ SWAGGER_SETTINGS = {
     }
 }
 
-if 'test' in sys.argv:
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
-    }
+CORS_ALLOWED_ORIGINS = [
+    "https://your-frontend-domain.railway.app",
+]
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
